@@ -41,72 +41,104 @@ class Position {
 
 class _MyHomePageState extends State<MyHomePage> {
   List<Position> pos = <Position>[];
+  AlertDialog errorDialog = AlertDialog();
 
   @override
-  Widget build(BuildContext context) {
+  void initState() {
     pos.add(Position(10, 10));
     pos.add(Position(50, 50));
     pos.add(Position(25, 100));
+    pos.add(Position(50, 100));
 
+    errorDialog = AlertDialog(
+      title: Text('Oops!'),
+      content: Text("Markers not found!"),
+      actions: [
+        TextButton(onPressed: () => Navigator.pop(context), child: Text('OK'))
+      ],
+    );
+    super.initState();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        child: Center(
-          child: CustomMultiChildLayout(
-            delegate: DragArea(pos),
-            children: <Widget>[
-              LayoutId(
-                id: 't0',
-                child: Draggable(
-                  feedback: Icon(Icons.filter_vintage),
-                  child: Icon(
-                    Icons.ac_unit,
-                    color: Colors.green,
+      body: Stack(children: <Widget>[
+        Container(
+          decoration: BoxDecoration(
+              image: DecorationImage(image: AssetImage("assets/map.PNG"))),
+          child: Center(
+            child: CustomMultiChildLayout(
+              delegate: DragArea(pos),
+              children: <Widget>[
+                for (int i = 0; i < pos.length; i++)
+                  LayoutId(
+                    id: 't' + i.toString(),
+                    child: Draggable(
+                      feedback: Icon(Icons.location_on),
+                      child: Icon(
+                        Icons.location_on,
+                        color: Colors.red,
+                      ),
+                      childWhenDragging: Container(),
+                      onDragEnd: (DraggableDetails d) {
+                        updateDraggedPosition(i, d);
+                      },
+                    ),
                   ),
-                  childWhenDragging: Container(),
-                  onDragEnd: (DraggableDetails d) {
-                    setState(() {
-                      pos[0].setPosition(d.offset.dx, d.offset.dy);
-                    });
-                  },
-                ),
-              ),
-              LayoutId(
-                id: 't1',
-                child: Draggable(
-                  feedback: Icon(Icons.filter_vintage),
-                  child: Icon(
-                    Icons.ac_unit,
-                    color: Colors.green,
-                  ),
-                  childWhenDragging: Container(),
-                  onDragEnd: (DraggableDetails d) {
-                    setState(() {
-                      pos[1].setPosition(d.offset.dx, d.offset.dy);
-                    });
-                  },
-                ),
-              ),
-              LayoutId(
-                id: 't2',
-                child: Draggable(
-                  feedback: Icon(Icons.filter_vintage),
-                  child: Icon(
-                    Icons.ac_unit,
-                    color: Colors.green,
-                  ),
-                  childWhenDragging: Container(),
-                  onDragEnd: (DraggableDetails d) {
-                    setState(() {
-                      pos[2].setPosition(d.offset.dx, d.offset.dy);
-                    });
-                  },
-                ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
-      ),
+        Align(
+          alignment: Alignment.bottomRight,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: ElevatedButton.icon(
+                  onPressed: () {
+                    setState(() {
+                      pos.add(Position(25, 25));
+                    });
+                  },
+                  icon: Icon(Icons.add),
+                  label: Text('Add Marker'),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: ElevatedButton.icon(
+                  onPressed: () {
+                    setState(() {
+                      if (pos.length > 0) {
+                        pos.removeLast();
+                      } else {
+                        showDialog(
+                            context: context,
+                            builder: (context) {
+                              return errorDialog;
+                            });
+                      }
+                    });
+                  },
+                  icon: Icon(Icons.delete),
+                  label: Text('Remove Marker'),
+                ),
+              )
+            ],
+          ),
+        )
+      ]),
     );
+  }
+
+  void updateDraggedPosition(int i, DraggableDetails d) {
+    print(i);
+    setState(() {
+      pos[i].setPosition(d.offset.dx, d.offset.dy);
+    });
   }
 }
 
@@ -117,7 +149,7 @@ class DragArea extends MultiChildLayoutDelegate {
 
   @override
   void performLayout(Size size) {
-    for (int i = 0; i < 3; i++) {
+    for (int i = 0; i < _p.length; i++) {
       layoutChild('t' + i.toString(), BoxConstraints.loose(size));
       positionChild('t' + i.toString(), Offset(_p[i].x, _p[i].y));
     }
