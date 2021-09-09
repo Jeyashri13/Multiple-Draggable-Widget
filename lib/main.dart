@@ -57,6 +57,7 @@ class _MyHomePageState extends State<MyHomePage> {
         TextButton(onPressed: () => Navigator.pop(context), child: Text('OK'))
       ],
     );
+
     super.initState();
   }
 
@@ -136,6 +137,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
   void updateDraggedPosition(int i, DraggableDetails d) {
     print(i);
+
     setState(() {
       pos[i].setPosition(d.offset.dx, d.offset.dy);
     });
