@@ -42,6 +42,12 @@ class Position {
 class _MyHomePageState extends State<MyHomePage> {
   List<Position> pos = <Position>[];
   AlertDialog errorDialog = AlertDialog();
+  double endScale = 0;
+  Size size = Size(0, 0);
+  Offset offset = Offset(0, 0);
+  late RenderBox renderBox;
+  TransformationController _transformationController =
+      TransformationController();
 
   @override
   void initState() {
@@ -58,36 +64,62 @@ class _MyHomePageState extends State<MyHomePage> {
       ],
     );
 
+    endScale = _transformationController.value.getMaxScaleOnAxis();
+
     super.initState();
   }
 
   @override
   Widget build(BuildContext context) {
+    size = MediaQuery.of(context).size;
     return Scaffold(
       body: Stack(children: <Widget>[
-        Container(
-          decoration: BoxDecoration(
-              image: DecorationImage(image: AssetImage("assets/map.PNG"))),
-          child: Center(
-            child: CustomMultiChildLayout(
-              delegate: DragArea(pos),
-              children: <Widget>[
-                for (int i = 0; i < pos.length; i++)
-                  LayoutId(
-                    id: 't' + i.toString(),
-                    child: Draggable(
-                      feedback: Icon(Icons.location_on),
-                      child: Icon(
-                        Icons.location_on,
-                        color: Colors.red,
+        InteractiveViewer(
+          minScale: 0.5,
+          maxScale: 2.5,
+          transformationController: _transformationController,
+          onInteractionEnd: (scale) {
+            setState(() {
+              endScale = _transformationController.value.getMaxScaleOnAxis();
+            });
+          },
+          child: Container(
+            width: double.infinity,
+            height: double.infinity,
+            decoration: BoxDecoration(
+              image: DecorationImage(
+                image: AssetImage("assets/map.PNG"),
+                fit: BoxFit.cover,
+              ),
+            ),
+            child: Center(
+              child: CustomMultiChildLayout(
+                delegate: DragArea(pos),
+                children: <Widget>[
+                  for (int i = 0; i < pos.length; i++)
+                    LayoutId(
+                      id: 't' + i.toString(),
+                      child: Draggable(
+                        feedback: Icon(Icons.location_on),
+                        child: Icon(
+                          Icons.location_on,
+                          color: Colors.red,
+                        ),
+                        childWhenDragging: Container(),
+                        onDragEnd: (DraggableDetails d) {
+                          setState(() {
+                            renderBox = context.findRenderObject() as RenderBox;
+                            offset = renderBox.globalToLocal(d.offset);
+                          });
+                          print('this is drag detail ' + d.offset.toString());
+                          print(
+                              'this is adjusted details ' + offset.toString());
+                          updateDraggedPosition(i, offset);
+                        },
                       ),
-                      childWhenDragging: Container(),
-                      onDragEnd: (DraggableDetails d) {
-                        updateDraggedPosition(i, d);
-                      },
                     ),
-                  ),
-              ],
+                ],
+              ),
             ),
           ),
         ),
@@ -96,16 +128,18 @@ class _MyHomePageState extends State<MyHomePage> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
-              Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: ElevatedButton.icon(
-                  onPressed: () {
-                    setState(() {
-                      pos.add(Position(25, 25));
-                    });
-                  },
-                  icon: Icon(Icons.add),
-                  label: Text('Add Marker'),
+              Container(
+                child: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: ElevatedButton.icon(
+                    onPressed: () {
+                      setState(() {
+                        pos.add(Position(Offset.zero.dx, Offset.zero.dy));
+                      });
+                    },
+                    icon: Icon(Icons.add),
+                    label: Text('Add Marker'),
+                  ),
                 ),
               ),
               Padding(
@@ -135,12 +169,8 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
-  void updateDraggedPosition(int i, DraggableDetails d) {
-    print(i);
-
-    setState(() {
-      pos[i].setPosition(d.offset.dx, d.offset.dy);
-    });
+  void updateDraggedPosition(int i, Offset d) {
+    pos[i].setPosition(d.dx, d.dy);
   }
 }
 
