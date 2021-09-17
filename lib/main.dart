@@ -52,9 +52,7 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   void initState() {
     for (var i = 0; i < 3; i++) {
-      _markers.add(PositionedMarker(
-        markerSize: 34.0,
-      ));
+      _markers.add(PositionedMarker());
     }
 
     errorDialog = AlertDialog(
@@ -113,9 +111,7 @@ class _MyHomePageState extends State<MyHomePage> {
                       onPressed: () {
                         print(pos.length);
                         setState(() {
-                          _markers.add(PositionedMarker(
-                            markerSize: newMarkerSize,
-                          ));
+                          _markers.add(PositionedMarker());
                         });
                       },
                       icon: Icon(Icons.add),
@@ -152,4 +148,3 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 }
-
